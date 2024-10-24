@@ -37,18 +37,31 @@ class TestGithubOrgClient(unittest.TestCase):
             self.assertEqual(test_return,
                              mock_get.return_value.get("repos_url"))
 
-    @patch("client.get_json", return_value=[{"name": "holberton"}])
+    @patch('client.get_json')
     def test_public_repos(self, mock_get):
-        """ to unit-test GithubOrgClient.public_repos """
-        with patch.object(GithubOrgClient,
-                          "_public_repos_url",
-                          new_callable=PropertyMock,
-                          return_value="https://api.github.com/") as mock_pub:
-            test_client = GithubOrgClient("hoberton")
-            test_return = test_client.public_repos()
-            self.assertEqual(test_return, ["holberton"])
-            mock_get.assert_called_once
-            mock_pub.assert_called_once
+        """Test the public_repos method"""
+        # Mock return value for get_json
+        mock_get.return_value = [
+            {"name": "repo1"},
+            {"name": "repo2"},
+            {"name": "repo3"}
+        ]
+        
+        with patch.object(
+                GithubOrgClient,
+                "_public_repos_url",
+                new_callable=PropertyMock,
+                return_value="https://api.github.com/test-url"
+        ) as mock_public_repos_url:
+            test_client = GithubOrgClient("test-org")
+            repos = test_client.public_repos()
+            
+            # Test that the list of repos matches expected
+            self.assertEqual(repos, ["repo1", "repo2", "repo3"])
+            
+            # Verify mocks were called exactly once
+            mock_get.assert_called_once()
+            mock_public_repos_url.assert_called_once()
 
     """ inputs to test the functionality """
     @parameterized.expand([
