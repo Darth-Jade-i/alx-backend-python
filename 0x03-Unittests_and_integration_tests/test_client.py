@@ -11,7 +11,6 @@ from urllib.error import HTTPError
 
 class TestGithubOrgClient(unittest.TestCase):
     """ TESTCASE """
-    """ inputs to test the functionality """
     @parameterized.expand([
         ("google"),
         ("abc"),
@@ -39,31 +38,22 @@ class TestGithubOrgClient(unittest.TestCase):
 
     @patch('client.get_json')
     def test_public_repos(self, mock_get):
-        """Test the public_repos method"""
-        # Mock return value for get_json
+        """ Test GithubOrgClient.public_repos method """
         mock_get.return_value = [
             {"name": "repo1"},
             {"name": "repo2"},
             {"name": "repo3"}
         ]
-        
-        with patch.object(
-                GithubOrgClient,
-                "_public_repos_url",
-                new_callable=PropertyMock,
-                return_value="https://api.github.com/test-url"
-        ) as mock_public_repos_url:
+        with patch.object(GithubOrgClient,
+                          "_public_repos_url",
+                          new_callable=PropertyMock,
+                          return_value="https://api.github.com/test-url") as mock_pub:
             test_client = GithubOrgClient("test-org")
             repos = test_client.public_repos()
-            
-            # Test that the list of repos matches expected
             self.assertEqual(repos, ["repo1", "repo2", "repo3"])
-            
-            # Verify mocks were called exactly once
-            mock_get.assert_called_once()
-            mock_public_repos_url.assert_called_once()
+            mock_get.assert_called_once_with("https://api.github.com/test-url")
+            mock_pub.assert_called_once()
 
-    """ inputs to test the functionality """
     @parameterized.expand([
         ({"license": {"key": "my_license"}}, "my_license", True),
         ({"license": {"key": "other_license"}}, "my_license", False),
@@ -86,6 +76,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         """ It is part of the unittest.TestCase API
         method to return example payloads found in the fixtures """
         cls.get_patcher = patch('requests.get', side_effect=HTTPError)
+        cls.get_patcher.start()
 
     @classmethod
     def tearDownClass(cls):
